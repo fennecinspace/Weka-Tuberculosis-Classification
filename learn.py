@@ -6,7 +6,6 @@ import logging as lg
 DEFAULT_ALGO_CLASS = "weka.classifiers.trees.J48"
 DEFAULT_WEKA_PATH = "/opt/weka/weka.jar"
 
-
 def get_args(argv):
     data, output, weka_path, weka_class = "", "", "", ""
 
@@ -66,6 +65,9 @@ class Model():
         return path
 
     def learn(self, command):
+        ## adding dataset
+        command = "{} {} '{}' -C 0.25 -M 2".format(command, "-t", self.data_path)
+        print(command)
         # while True:
         try:
             returned_raw = sp.check_output(['bash', '-c', command], stderr = sp.STDOUT)
@@ -88,12 +90,7 @@ if __name__ == '__main__':
     model = Model(data, output)
 
     ## setting up main command
-    arg = '-h'
-    command = "java -cp {} {} {}".format(weka.weka_path, weka.weka_class, arg)
+    command = "java -cp {} {}".format(weka.weka_path, weka.weka_class)
 
     ## learning
     model.learn(command)
-
-
-
-
