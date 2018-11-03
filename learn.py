@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-import os, json, sys, getopt, re
+import os, json, sys, getopt, re, random, time
 import subprocess as sp
 import logging as lg
 
@@ -65,37 +65,66 @@ class Model():
         return path
 
     def get_weka_learning_result(self, raw_data, col = 'ROC Area'):
-        all_data = raw_data.decode('utf-8')
-        data = all_data[ all_data.index('Stratified cross-validation') : ]   #cval
-        print(data)
+        try:
+            all_data = raw_data.decode('utf-8')
+            # print(all_data)
+            # time.sleep(5)
+            data = all_data[ all_data.index('Stratified cross-validation') : ]   #cval
 
-        columns_str = [line for line in data.splitlines() if line.find(col) != -1][0].strip()
-        avgs_str = [line for line in data.splitlines() if line.find('Weighted Avg') != -1][0].strip()
+            columns_str = [line for line in data.splitlines() if line.find(col) != -1][0].strip()
+            avgs_str = [line for line in data.splitlines() if line.find('Weighted Avg') != -1][0].strip()
 
-        columns = re.findall('(\w+[ -]\w+|\w+)', columns_str)[:-1]
-        avgs = re.findall('\d+\.\d+', avgs_str)
-        print(columns)
-        print(avgs)
-        if columns.index(col) != -1:
-            return float(avgs[columns.index(col)]), data
-        else:
-            print('Column ({}) could not be found !'.format(col))
-            return 0, data
+            columns = re.findall('(\w+[ -]\w+|\w+)', columns_str)[:-1]
+            avgs = re.findall('\d+\.\d+', avgs_str)
+            if columns.index(col) != -1:
+                return float(avgs[columns.index(col)]), data
+            else:
+                print('Column ({}) could not be found !'.format(col))
+                return 0, data
+        except:
+            return 0, all_data
+
 
     def learn(self, command):
-        ## adding dataset
-        command = "{} {} '{}' -C 0.25 -M 2".format(command, "-t", self.data_path)
-        print(command)
-        # while True:
-        try:
-            returned_raw = sp.check_output(['bash', '-c', command], stderr = sp.STDOUT)
-            mesure, returned = self.get_weka_learning_result(returned_raw, 'ROC Area')
-            print(mesure)
+        max_mesure = 0
+        best_params = ''
+        i = 0
+        while True:
+            i += 1
+            params = self.get_j48_params()
+            final_command = "{} {} '{}' {}".format(command, "-t", self.data_path, params)
+            # print(params)
+            # print(final_command)
+            try:
+                returned_raw = sp.check_output(['bash', '-c', final_command], stderr = sp.STDOUT)
+                mesure, returned = self.get_weka_learning_result(returned_raw, 'ROC Area')
+                if mesure > max_mesure:
+                    max_mesure = mesure
+                    best_params = params
+                sys.stdout.write('\rRun {} - Mesure {} - Params  {}'.format(i, max_mesure, best_params))
 
-        except Exception as e:
-            lg.exception(e)
+            except Exception as e:
+                lg.exception(e)
 
+    def get_j48_params(self):
+        # params = ''
+        # if bool(random.getrandbits(1)): params = '{} -C {}'.format(params, random.uniform(0,1)) ## above .5 is same as disabling it
+        # if bool(random.getrandbits(1)): params = '{} -M {}'.format(params, random.randint(1, 130)) # replace 130 with number of example maybe ? ask teacher for limit
+        # if bool(random.getrandbits(1)): params = '{} -N {}'.format(params, random.randint(1, 130)) # replace 130 with number of example maybe ? ask teacher for limit
+        # if bool(random.getrandbits(1)): params = '{} -Q {}'.format(params, random.randint(0,130)) # replace 130 with number of example maybe ? ask teacher for limit
+        # if bool(random.getrandbits(1)): params = '{} -U'.format(params)
+        # if bool(random.getrandbits(1)): params = '{} -O'.format(params)
+        # if bool(random.getrandbits(1)): params = '{} -R'.format(params)
+        # if bool(random.getrandbits(1)): params = '{} -B'.format(params)
+        # if bool(random.getrandbits(1)): params = '{} -S'.format(params)
+        # if bool(random.getrandbits(1)): params = '{} -L'.format(params)
+        # if bool(random.getrandbits(1)): params = '{} -A'.format(params)
+        # if bool(random.getrandbits(1)): params = '{} -J'.format(params)
 
+        params = "-C {} -M {}".format(round(random.uniform(0,1), 5), random.randint(1, 20))
+        return params
+
+        
 
 
 
