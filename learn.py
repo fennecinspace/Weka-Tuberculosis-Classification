@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-import os, json, sys, getopt
+import os, json, sys, getopt, re
 import subprocess as sp
 import logging as lg
 
@@ -64,6 +64,24 @@ class Model():
             path = input("incorrect dataset path, dataset path : ")
         return path
 
+    def get_weka_learning_result(self, raw_data, col = 'ROC Area'):
+        all_data = raw_data.decode('utf-8')
+        data = all_data[ all_data.index('Stratified cross-validation') : ]   #cval
+        print(data)
+
+        columns_str = [line for line in data.splitlines() if line.find(col) != -1][0].strip()
+        avgs_str = [line for line in data.splitlines() if line.find('Weighted Avg') != -1][0].strip()
+
+        columns = re.findall('(\w+[ -]\w+|\w+)', columns_str)[:-1]
+        avgs = re.findall('\d+\.\d+', avgs_str)
+        print(columns)
+        print(avgs)
+        if columns.index(col) != -1:
+            return float(avgs[columns.index(col)]), data
+        else:
+            print('Column ({}) could not be found !'.format(col))
+            return 0, data
+
     def learn(self, command):
         ## adding dataset
         command = "{} {} '{}' -C 0.25 -M 2".format(command, "-t", self.data_path)
@@ -71,8 +89,8 @@ class Model():
         # while True:
         try:
             returned_raw = sp.check_output(['bash', '-c', command], stderr = sp.STDOUT)
-            returned = returned_raw.decode('utf-8')
-            print(returned)
+            mesure, returned = self.get_weka_learning_result(returned_raw, 'ROC Area')
+            print(mesure)
 
         except Exception as e:
             lg.exception(e)
@@ -94,3 +112,6 @@ if __name__ == '__main__':
 
     ## learning
     model.learn(command)
+
+    
+# python3 learn.py -d $HOME"/Desktop/Machine Learning - M1 ISI/tp-projet/data/features/train/y_features_opt2_300_train_MODIFIED.csv" -o $HOME/Desktop/learn.json -p /opt/weka/weka.jar -c "weka.classifiers.trees.J48"
