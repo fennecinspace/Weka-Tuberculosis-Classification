@@ -75,7 +75,8 @@ class Model():
             avgs_str = [line for line in data.splitlines() if line.find('Weighted Avg') != -1][0].strip()
 
             columns = re.findall('(\w+[ -]\w+|\w+)', columns_str)[:-1]
-            avgs = re.findall('\d+\.\d+', avgs_str)
+            avgs = re.findall('\d+\.\d+|\?', avgs_str)
+            avgs = [x if x != '?' else -1 for x in avgs]
             if columns.index(col) != -1:
                 return float(avgs[columns.index(col)]), data
             else:
@@ -101,31 +102,49 @@ class Model():
                 if mesure > max_mesure:
                     max_mesure = mesure
                     best_params = params
-                sys.stdout.write('\rRun {} - Mesure {} - Params  {}'.format(i, max_mesure, best_params))
+
+                os.system('clear')
+                sys.stdout.write('\rRun {} => Mesure {} - Params  {}'.format(str(i).zfill(4), max_mesure, best_params))
 
             except Exception as e:
                 lg.exception(e)
 
     def get_j48_params(self):
-        # params = ''
-        # if bool(random.getrandbits(1)): params = '{} -C {}'.format(params, random.uniform(0,1)) ## above .5 is same as disabling it
-        # if bool(random.getrandbits(1)): params = '{} -M {}'.format(params, random.randint(1, 130)) # replace 130 with number of example maybe ? ask teacher for limit
-        # if bool(random.getrandbits(1)): params = '{} -N {}'.format(params, random.randint(1, 130)) # replace 130 with number of example maybe ? ask teacher for limit
-        # if bool(random.getrandbits(1)): params = '{} -Q {}'.format(params, random.randint(0,130)) # replace 130 with number of example maybe ? ask teacher for limit
-        # if bool(random.getrandbits(1)): params = '{} -U'.format(params)
-        # if bool(random.getrandbits(1)): params = '{} -O'.format(params)
-        # if bool(random.getrandbits(1)): params = '{} -R'.format(params)
-        # if bool(random.getrandbits(1)): params = '{} -B'.format(params)
-        # if bool(random.getrandbits(1)): params = '{} -S'.format(params)
-        # if bool(random.getrandbits(1)): params = '{} -L'.format(params)
-        # if bool(random.getrandbits(1)): params = '{} -A'.format(params)
-        # if bool(random.getrandbits(1)): params = '{} -J'.format(params)
+        params = ''
+        if bool(random.getrandbits(1)): 
+            params = '{} -C {}'.format(params, random.uniform(0,1)) ## above .5 is same as disabling it
+        else:
+            if bool(random.getrandbits(1)): 
+                params = '{} -N {} -R'.format(params, random.randint(2, 130)) # replace 130 with number of example maybe ? ask teacher for limit
+            else: 
+                params = '{} -U'.format(params)
 
-        params = "-C {} -M {}".format(round(random.uniform(0,1), 5), random.randint(1, 20))
-        return params
+        if bool(random.getrandbits(1)): 
+            params = '{} -M {}'.format(params, random.randint(1, 130)) # replace 130 with number of example maybe ? ask teacher for limit
 
+        if bool(random.getrandbits(1)): 
+            params = '{} -Q {}'.format(params, random.randint(1,130)) # replace 130 with number of example maybe ? ask teacher for limit
+
+        if bool(random.getrandbits(1)): 
+            params = '{} -O'.format(params)
+
+        if bool(random.getrandbits(1)): 
+            params = '{} -B'.format(params)
+
+        if params.find('-U') == -1:
+            if bool(random.getrandbits(1)): 
+                params = '{} -S'.format(params)
+            if bool(random.getrandbits(1)): 
+                params = '{} -L'.format(params)
+            if bool(random.getrandbits(1)): 
+                params = '{} -A'.format(params)
+            if bool(random.getrandbits(1)): 
+                params = '{} -J'.format(params)
         
+        if bool(random.getrandbits(1)): 
+            params = '{} -doNotMakeSplitPointActualValue'.format(params)
 
+        return params
 
 
 if __name__ == '__main__':
@@ -144,3 +163,5 @@ if __name__ == '__main__':
 
     
 # python3 learn.py -d $HOME"/Desktop/Machine Learning - M1 ISI/tp-projet/data/features/train/y_features_opt2_300_train_MODIFIED.csv" -o $HOME/Desktop/learn.json -p /opt/weka/weka.jar -c "weka.classifiers.trees.J48"
+
+### Run 0011 => Mesure 0.544 - Params   -C 0.599603998565375 -Q 11 -O -A -J -doNotMakeSplitPointActualValue
