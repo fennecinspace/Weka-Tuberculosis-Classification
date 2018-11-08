@@ -1,11 +1,13 @@
 #!/usr/bin/python3
-import os, json, sys, getopt, re, random, time
+import os, sys, getopt, re, random
 import subprocess as sp
 import logging as lg
 
+BASE_DIR = os.path.dirname(__file__) 
+DEFAULT_WEKA_PATH = os.path.join( *[BASE_DIR, 'weka', 'weka.jar'] )
+
 DEFAULT_ALGO_CLASS = "weka.classifiers.trees.J48"
-DEFAULT_WEKA_PATH = "/opt/weka/weka.jar"
-BAGGING = " weka.classifiers.meta.Bagging"
+BAGGING = "weka.classifiers.meta.Bagging"
 DEFAULT_MESURE = 'ROC Area'
 DONE_J48_PARAMS, DONE_BAGGING_PARAMS = [], []
 
@@ -71,8 +73,6 @@ class Model():
     def get_weka_learning_result(self, raw_data, col = 'ROC Area'):
         try:
             all_data = raw_data.decode('utf-8')
-            # print(all_data)
-            # time.sleep(5)
             data = all_data[ all_data.index('Stratified cross-validation') : ]   #cval
 
             columns_str = [line for line in data.splitlines() if line.find(col) != -1][0].strip()
