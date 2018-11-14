@@ -12,13 +12,14 @@ DEFAULT_MESURE = 'ROC Area'
 DONE_J48_PARAMS, DONE_BAGGING_PARAMS = [], []
 
 def get_args(argv):
-    data, output, weka_path, weka_class = "", "", "", ""
+    data, cross, output, weka_path, weka_class = None, None, None, None, None
 
     try:
-        opts, args = getopt.getopt(argv,"d:o:p:c",["data=","output=","weka-path","weka-class"])
+        opts, args = getopt.getopt(argv,"d:v:o:p:c",["data=","cross-val=","output=","weka-path","weka-class"])
     except getopt.GetoptError:
         print ('python3 learn.py [OPTIONS]\nReturns the best model for a certain dataset, uses Weka\n')
         print ('  -d, --data           dataset to use, file format must be compatibale with weka')
+        print ('  -v, --cross-val      dataset to use, for cross validation')
         print ('  -o, --output         model output file (must be .json, parent directory must exist)')
         print ('  -p, --weka-path      path to the weka.jar file')
         print ('  -c, --weka-class     weka class')
@@ -26,6 +27,8 @@ def get_args(argv):
     for opt, arg in opts:
         if opt in ["-d", "--data"]:
             data = arg
+        elif opt in ["-v", "--cross-val"]:
+            cross = arg
         elif opt in ["-o", "--output"]:
             output = arg
         elif opt in ["-p", "--weka-path"]:
@@ -33,7 +36,7 @@ def get_args(argv):
         elif opt in ["-c", "--weka-class"]:
             weka_class = arg
 
-    return (data, output, weka_path, weka_class)
+    return (data, cross, output, weka_path, weka_class)
 
 
 class Weka():
@@ -52,10 +55,11 @@ class Weka():
 
 
 class Model():
-    __slots__ = ['data_path', 'output_path'] 
+    __slots__ = ['data_path', 'output_path', 'cross_path'] 
 
-    def __init__(self, data_path, output_path):
+    def __init__(self, data_path, cross_path = None, output_path = None):
         self.data_path = self.check_data_path(data_path)
+        self.cross_path = self.check_data_path(cross_path, val = True) 
         # self.output_path = self.check_output_path(output_path)
 
     @classmethod
@@ -65,15 +69,20 @@ class Model():
         return path
 
     @classmethod
-    def check_data_path(cls, path):
+    def check_data_path(cls, path, val = False):
+        if val == True and path == None:
+            return None
         while not os.path.exists(path) :
             path = input("incorrect dataset path, dataset path : ")
         return path
 
-    def get_weka_learning_result(self, raw_data, col = 'ROC Area'):
+    def get_weka_learning_result(self, raw_data, col = 'ROC Area', cross = False):
         try:
             all_data = raw_data.decode('utf-8')
-            data = all_data[ all_data.index('Stratified cross-validation') : ]   #cval
+            if cross == True:
+                data = all_data[ all_data.index('Error on test data') : ]
+            else:
+                data = all_data[ all_data.index('Stratified cross-validation') : ]
 
             columns_str = [line for line in data.splitlines() if line.find(col) != -1][0].strip()
             avgs_str = [line for line in data.splitlines() if line.find('Weighted Avg') != -1][0].strip()
@@ -105,11 +114,13 @@ class Model():
         best_algo_params = ''
         best_bagging_params = ''
         best_mesures = [[],[]]
+        best_cross_val = ''
         i = 0
         
         command = self.get_main_command(weka)
 
         while True:
+            check_cross_val = False
             i += 1
             algo_params = self.get_j48_params()
 
@@ -124,6 +135,7 @@ class Model():
             try:
                 returned_raw = sp.check_output(['bash', '-c', final_command], stderr = sp.STDOUT)
                 mesure, returned, mesures_cols, mesures_vals = self.get_weka_learning_result(returned_raw, DEFAULT_MESURE)
+                
                 if mesure > max_mesure:
                     max_mesure = mesure
                     best_algo_params = algo_params
@@ -131,6 +143,12 @@ class Model():
                     if weka.bagging_enabled:
                         best_bagging_params = bagging_params
                     best_mesures = [mesures_cols, mesures_vals]
+
+                    check_cross_val = True
+
+                # if check_cross_val and self.cross_path:
+                    if self.cross_path:
+                        best_cross_val, data = self.test(weka, algo_params, bagging_params)
 
                 os.system('clear')
                 print('Run {} => {} {}'.format(str(i).zfill(4), DEFAULT_MESURE, max_mesure), end = '\n\n')
@@ -140,6 +158,8 @@ class Model():
                 print('Mesures :')
                 for col, val in list(zip(best_mesures[0], best_mesures[1])):
                     print('{} : {}'.format(col, val))
+
+                print(best_cross_val)
 
             except Exception as e:
                 lg.exception(e)
@@ -217,14 +237,35 @@ class Model():
         DONE_BAGGING_PARAMS += [params]
         return params
 
+    def test(self, weka, algo_params, bagging_params):
+        command = self.get_main_command(weka)
+
+        if weka.bagging_enabled:
+            final_command = "{} {} -t '{}' -T '{}' -W {} -- {}".format(command, bagging_params, self.data_path, self.cross_path, weka.weka_class, algo_params)
+        else:
+            final_command = "{} {} -t '{}' -T '{}'".format(command, algo_params, self.data_path, self.cross_path)
+
+        try:
+            returned_raw = sp.check_output(['bash', '-c', final_command], stderr = sp.STDOUT)
+            mesure, returned, mesures_cols, mesures_vals = self.get_weka_learning_result(returned_raw, DEFAULT_MESURE, cross = True)
+            best_cross_val = '\nCross Validation => {} {}\n'.format(DEFAULT_MESURE, mesure)
+            best_cross_val += 'Mesures :\n'
+            for col, val in list(zip(mesures_cols, mesures_vals)):
+                best_cross_val += '{} : {}\n'.format(col, val)
+            return best_cross_val, returned
+
+        except Exception as e:
+            lg.exception(e)
+            return '', ''
+
 
 if __name__ == '__main__':
     ## getting information
-    data, output, weka_path, weka_class = get_args(sys.argv[1:])
+    data, cross, output, weka_path, weka_class = get_args(sys.argv[1:])
 
     ## intializing classes
     weka = Weka(weka_path, weka_class, True)
-    model = Model(data, output)
+    model = Model(data, cross, output)
 
     ## learning
     model.learn(weka)
