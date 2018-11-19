@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'channels',
+    'gui',
 ]
 
 MIDDLEWARE = [
@@ -69,7 +71,8 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'ml.wsgi.application'
-
+### ASGI settings
+ASGI_APPLICATION = "ml.routing.application"
 
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
