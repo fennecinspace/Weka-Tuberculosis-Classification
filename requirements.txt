@@ -1,0 +1,4 @@
+django==2.1.1
+django-livereload-server==0.3.2 ## for development only
+channels==2.1.2 ## for real time application
+channels_redis==2.2.1 ## dependecy for channels layers
