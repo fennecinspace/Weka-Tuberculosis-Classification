@@ -2,6 +2,8 @@
 import os, sys, getopt, re, random
 import subprocess as sp
 import logging as lg
+import json
+from datetime import datetime as dt
 
 BASE_DIR = os.path.dirname(__file__) 
 DEFAULT_WEKA_PATH = os.path.join( *[BASE_DIR, 'weka', 'weka.jar'] )
@@ -60,12 +62,13 @@ class Model():
     def __init__(self, data_path, cross_path = None, output_path = None):
         self.data_path = self.check_data_path(data_path)
         self.cross_path = self.check_data_path(cross_path, val = True) 
-        # self.output_path = self.check_output_path(output_path)
+        self.output_path = self.check_output_path(output_path)
 
     @classmethod
     def check_output_path(cls, path):
-        while not os.path.exists( os.path.dirname(path) ) :
-            path = input("output file directory doesn't exist, output path : ")
+        if path:
+            while not os.path.exists( os.path.dirname(path) ) :
+                path = input("output file directory doesn't exist, output path : ")
         return path
 
     @classmethod
@@ -76,13 +79,44 @@ class Model():
             path = input("incorrect dataset path, dataset path : ")
         return path
 
+    def save_data(self, weka, data, mesure):
+        file_path = os.path.join( self.output_path, weka.weka_class + '.json')
+
+        try:
+            with open(file_path, 'r') as file:
+                runs =  json.loads(file.read())
+
+            with open(file_path, 'w') as file:
+                if weka.bagging_enabled:
+                    index = runs['bagging']['index']
+                    runs['bagging']['results'] +=  [{
+                        'i': index,
+                        'mesure': mesure,
+                        'content': data,
+                    }]
+                    runs['bagging']['index'] += 1
+                else:
+                    index = runs['no-bagging']['index']
+                    runs['no-bagging']['results'] = [{
+                        'i': index,
+                        'mesure': mesure,
+                        'content': data,
+                    }]
+                    runs['no-bagging']['index'] += 1
+                file.write(json.dumps(runs))
+
+        except Exception as e:
+            print(e)
+            
+
     def get_weka_learning_result(self, raw_data, col = 'ROC Area', cross = False):
         try:
             all_data = raw_data.decode('utf-8')
-            if cross == True:
-                data = all_data[ all_data.index('Error on test data') : ]
-            else:
-                data = all_data[ all_data.index('Stratified cross-validation') : ]
+            data = all_data[ all_data.index('Stratified cross-validation') : ]
+            # if cross == True:
+            #     data = all_data[ all_data.index('Error on test data') : ]
+            # else:
+            #     data = all_data[ all_data.index('Stratified cross-validation') : ]
 
             columns_str = [line for line in data.splitlines() if line.find(col) != -1][0].strip()
             avgs_str = [line for line in data.splitlines() if line.find('Weighted Avg') != -1][0].strip()
@@ -114,13 +148,13 @@ class Model():
         best_algo_params = ''
         best_bagging_params = ''
         best_mesures = [[],[]]
-        best_cross_val = ''
+        # best_cross_val = ''
         i = 0
         
         command = self.get_main_command(weka)
 
         while True:
-            check_cross_val = False
+            # check_cross_val = False
             i += 1
             algo_params = self.get_j48_params()
 
@@ -135,20 +169,18 @@ class Model():
             try:
                 returned_raw = sp.check_output(['bash', '-c', final_command], stderr = sp.STDOUT)
                 mesure, returned, mesures_cols, mesures_vals = self.get_weka_learning_result(returned_raw, DEFAULT_MESURE)
-                
+
                 if mesure > max_mesure:
                     max_mesure = mesure
                     best_algo_params = algo_params
-                    
                     if weka.bagging_enabled:
                         best_bagging_params = bagging_params
                     best_mesures = [mesures_cols, mesures_vals]
-
-                    check_cross_val = True
-
+                #     check_cross_val = True
+                
                 # if check_cross_val and self.cross_path:
-                    if self.cross_path:
-                        best_cross_val, data = self.test(weka, algo_params, bagging_params)
+                    # if self.cross_path:
+                    #     best_cross_val, data = self.test(weka, algo_params, bagging_params)
 
                 os.system('clear')
                 print('Run {} => {} {}'.format(str(i).zfill(4), DEFAULT_MESURE, max_mesure), end = '\n\n')
@@ -159,7 +191,8 @@ class Model():
                 for col, val in list(zip(best_mesures[0], best_mesures[1])):
                     print('{} : {}'.format(col, val))
 
-                print(best_cross_val)
+                self.save_data(weka, returned, mesure)
+                # print(best_cross_val)
 
             except Exception as e:
                 lg.exception(e)
@@ -237,26 +270,26 @@ class Model():
         DONE_BAGGING_PARAMS += [params]
         return params
 
-    def test(self, weka, algo_params, bagging_params):
-        command = self.get_main_command(weka)
+    # def test(self, weka, algo_params, bagging_params):
+    #     command = self.get_main_command(weka)
 
-        if weka.bagging_enabled:
-            final_command = "{} {} -t '{}' -T '{}' -W {} -- {}".format(command, bagging_params, self.data_path, self.cross_path, weka.weka_class, algo_params)
-        else:
-            final_command = "{} {} -t '{}' -T '{}'".format(command, algo_params, self.data_path, self.cross_path)
+    #     if weka.bagging_enabled:
+    #         final_command = "{} {} -t '{}' -T '{}' -W {} -- {}".format(command, bagging_params, self.data_path, self.cross_path, weka.weka_class, algo_params)
+    #     else:
+    #         final_command = "{} {} -t '{}' -T '{}'".format(command, algo_params, self.data_path, self.cross_path)
 
-        try:
-            returned_raw = sp.check_output(['bash', '-c', final_command], stderr = sp.STDOUT)
-            mesure, returned, mesures_cols, mesures_vals = self.get_weka_learning_result(returned_raw, DEFAULT_MESURE, cross = True)
-            best_cross_val = '\nCross Validation => {} {}\n'.format(DEFAULT_MESURE, mesure)
-            best_cross_val += 'Mesures :\n'
-            for col, val in list(zip(mesures_cols, mesures_vals)):
-                best_cross_val += '{} : {}\n'.format(col, val)
-            return best_cross_val, returned
+    #     try:
+    #         returned_raw = sp.check_output(['bash', '-c', final_command], stderr = sp.STDOUT)
+    #         mesure, returned, mesures_cols, mesures_vals = self.get_weka_learning_result(returned_raw, DEFAULT_MESURE, cross = True)
+    #         best_cross_val = '\nCross Validation => {} {}\n'.format(DEFAULT_MESURE, mesure)
+    #         best_cross_val += 'Mesures :\n'
+    #         for col, val in list(zip(mesures_cols, mesures_vals)):
+    #             best_cross_val += '{} : {}\n'.format(col, val)
+    #         return best_cross_val, returned
 
-        except Exception as e:
-            lg.exception(e)
-            return '', ''
+    #     except Exception as e:
+    #         lg.exception(e)
+    #         return '', ''
 
 
 if __name__ == '__main__':
