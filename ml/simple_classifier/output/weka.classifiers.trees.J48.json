@@ -1,0 +1,10 @@
+{
+    "bagging": {
+        "index": 0, 
+        "results": []
+    },
+    "no-bagging": {
+        "index": 0, 
+        "results": []
+    }
+}
