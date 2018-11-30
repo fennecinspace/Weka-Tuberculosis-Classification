@@ -13,7 +13,7 @@ DEFAULT_WEKA_PATH = os.path.join( *[BASE_DIR, 'weka', 'weka.jar'] )
 J48_CLASS = "weka.classifiers.trees.J48"
 BAGGING_CLASS = "weka.classifiers.meta.Bagging"
 
-BAGGING_ENABLED = True
+BAGGING_ENABLED = False
 
 DEFAULT_CLASS = J48_CLASS
 DEFAULT_MESURE = 'ROC Area'
@@ -85,7 +85,7 @@ def get_j48_params():
     global DONE_J48_PARAMS
     params = ''
     
-    while params not in DONE_J48_PARAMS and params == '':
+    while params in DONE_J48_PARAMS or params == '':
         if bool(random.getrandbits(1)): 
             params = '{} -C {}'.format(params, random.uniform(0,1)) ## above .5 is same as disabling it
         else:

@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 40 40" version="1.1">
-<g id="surface1" stroke="none" fill="#f44336" stroke-width="1px">
-<path style="" d="M 4 37.5 C 2.621094 37.5 1.5 36.378906 1.5 35 L 1.5 4 C 1.5 2.621094 2.621094 1.5 4 1.5 L 35 1.5 C 36.378906 1.5 37.5 2.621094 37.5 4 L 37.5 35 C 37.5 36.378906 36.378906 37.5 35 37.5 Z " stroke="none" fill="#fff" stroke-width="1px"></path>
-<path style="" d="M 35 2 C 36.101563 2 37 2.898438 37 4 L 37 35 C 37 36.101563 36.101563 37 35 37 L 4 37 C 2.898438 37 2 36.101563 2 35 L 2 4 C 2 2.898438 2.898438 2 4 2 L 35 2 M 35 1 L 4 1 C 2.34375 1 1 2.34375 1 4 L 1 35 C 1 36.65625 2.34375 38 4 38 L 35 38 C 36.65625 38 38 36.65625 38 35 L 38 4 C 38 2.34375 36.65625 1 35 1 Z " stroke="none" fill="#444b54" stroke-width="1px"></path>
-<path style="" d="M 19 2 L 20 2 L 20 37 L 19 37 Z " stroke="none" fill="#444b54" stroke-width="1px"></path>
-<path style="" d="M 2 19 L 37 19 L 37 20 L 2 20 Z " stroke="none" fill="#444b54" stroke-width="1px"></path>
-<path style="stroke-linecap: butt; stroke-linejoin: miter; stroke-opacity: 1; stroke-miterlimit: 10;" d="M 2 34.5 C 11.800781 34.5 11.101563 4.5 19.5 4.5 C 27.902344 4.5 27.339844 34.5 37 34.5 " stroke="#ff697b" fill="none" stroke-width="1px"></path>
-</g>
-</svg>
