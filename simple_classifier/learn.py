@@ -12,10 +12,10 @@ DEFAULT_WEKA_PATH = os.path.join( *[BASE_DIR, 'weka', 'weka.jar'] )
 
 HOEFFDINGTREE_CLASS = "weka.classifiers.trees.HoeffdingTree"
 J48_CLASS = "weka.classifiers.trees.J48"
-
+RANDOMFOREST_CLASS = "weka.classifiers.trees.RandomForest"
 BAGGING_CLASS = "weka.classifiers.meta.Bagging"
 
-BAGGING_ENABLED = True
+BAGGING_ENABLED = False
 
 DEFAULT_CLASS = HOEFFDINGTREE_CLASS
 DEFAULT_MESURE = 'ROC Area'
@@ -31,6 +31,7 @@ def get_main_command():
         else:
             command = "{} {}".format(command, DEFAULT_CLASS)
         return command
+        
 
 def get_weka_learning_result(raw_data):
     try:
@@ -70,7 +71,7 @@ def save_data(data, mesure):
                 runs['bagging']['index'] += 1
             else:
                 index = runs['no-bagging']['index']
-                runs['no-bagging']['results'] = [{
+                runs['no-bagging']['results'] += [{
                     'i': index,
                     'mesure': mesure,
                     'content': data,
@@ -127,6 +128,91 @@ def get_j48_params():
     DONE_PARAMS += [params]
 
     return params
+
+def get_RandomForest_params():
+    global DONE_PARAMS
+    params = ''
+    
+    while params in DONE_PARAMS or params == '':
+        if bool(random.getrandbits(1)): 
+            params = '{} -attribute-importance'.format(params)
+        
+        if bool(random.getrandbits(1)): 
+            params = '{} -P {}'.format(params, random.randint(0,100)) 
+        
+        if bool(random.getrandbits(1)): 
+            params = '{} -I {}'.format(params, random.randint(0,500))     
+        
+        if bool(random.getrandbits(1)): 
+            params = '{} -num-slots 0'.format(params) 
+        
+        if bool(random.getrandbits(1)):
+            params = '{} -K {}'.format(params, random.randint(0,300))
+        
+        if bool(random.getrandbits(1)): 
+            params = '{} -M {}'.format(params, random.randint(1,50)) 
+        
+        if bool(random.getrandbits(1)): 
+            params = '{} -V {}'.format(params, random.uniform(0,1))
+        
+        if bool(random.getrandbits(1)): 
+            params = '{} -S {}'.format(params, random.randint(1,50)) 
+        
+        if bool(random.getrandbits(1)): 
+            params = '{} -depth {}'.format(params, random.randint(0,300))
+        
+        if bool(random.getrandbits(1)): 
+            params = '{} -N {}'.format(params, random.randint(0,50))
+       
+        if bool(random.getrandbits(1)): 
+            params = '{} -U'.format(params)
+
+        if bool(random.getrandbits(1)): 
+            params = '{} -B'.format(params)
+
+        if bool(random.getrandbits(1)): 
+            params = '{} -O'.format(params)
+        
+        if bool(random.getrandbits(1)): 
+            params = '{} -num-decimal-places'.format(params)    
+
+        if bool(random.getrandbits(1)): 
+            params = '{} -do-not-check-capabilities'.format(params)
+
+        if params == '':
+          params = '-P 0.25 '
+
+    DONE_PARAMS += [params]
+
+    return params
+
+
+def get_hoeffdingtree_params():
+    global DONE_PARAMS
+    params = ''
+    
+    while params in DONE_PARAMS or params == '':
+        if bool(random.getrandbits(1)): 
+            params = '{} -H {}'.format(params, random.uniform(0,1))
+        if bool(random.getrandbits(1)): 
+            params = '{} -L {}'.format(params, random.choice([0,1,2]))
+        if bool(random.getrandbits(1)): 
+            params = '{} -S {}'.format(params, random.choice([0,1]))
+        if bool(random.getrandbits(1)): 
+            params = '{} -M {}'.format(params, random.uniform(0,1))
+        if bool(random.getrandbits(1)): 
+            params = '{} -G {}'.format(params, random.randint(0,300))
+        if bool(random.getrandbits(1)): 
+            params = '{} -N {}'.format(params, random.randint(0,130))
+        if bool(random.getrandbits(1)): 
+            params = '{} -P'.format(params)
+        
+        if params == '':
+            params = '-H 0.05 -L 2 -S 1 -M 0.01 -G 200 -N 0'
+            
+    DONE_PARAMS += [params]
+    return params
+
 
 def get_bagging_params():
     global DONE_PARAMS
@@ -198,7 +284,12 @@ def learn():
     i = 0
     while True:
         i += 1
-        algo_params = get_hoeffdingtree_params()
+        if DEFAULT_CLASS == J48_CLASS:
+            algo_params = get_j48_params()
+        elif DEFAULT_CLASS == HOEFFDINGTREE_CLASS:
+            algo_params = get_hoeffdingtree_params()
+        elif DEFAULT_CLASS == RANDOMFOREST_CLASS:
+            algo_params = get_RandomForest_params()
 
         try:
            max_mesure, best_algo_params, best_bagging_params, best_mesures = run(algo_params, max_mesure, best_algo_params, best_bagging_params, best_mesures, i)
@@ -206,34 +297,7 @@ def learn():
         except Exception as e:
             lg.exception(e)
 
-def get_hoeffdingtree_params():
-    global DONE_PARAMS
-    params = ''
-    
-    while params in DONE_PARAMS or params == '':
-        if bool(random.getrandbits(1)): 
-            params = '{} -H {}'.format(params, random.uniform(0,1))
-        if bool(random.getrandbits(1)): 
-            params = '{} -L {}'.format(params, random.choice([0,1,2]))
-        if bool(random.getrandbits(1)): 
-            params = '{} -S {}'.format(params, random.choice([0,1]))
-        if bool(random.getrandbits(1)): 
-            params = '{} -M {}'.format(params, random.uniform(0,1))
-        if bool(random.getrandbits(1)): 
-            params = '{} -G {}'.format(params, random.randint(0,300))
-        if bool(random.getrandbits(1)): 
-            params = '{} -N {}'.format(params, random.randint(0,130))
-        if bool(random.getrandbits(1)): 
-            params = '{} -P'.format(params)
-        
-        if params == '':
-            params = '-H 0.05 -L 2 -S 1 -M 0.01 -G 200 -N 0'
-            
-    DONE_PARAMS += [params]
-    return params
-# 
-#  -S 1 -E 1.0 e-7 -H 0.05 -L 2 -S 1 -M 0.01 G 200 N 0.0
-# java -cp weka/weka.jar/ weka.classifiers.trees.HoeffdingTree -H 0.05 -L 2 -S 1 -M 0.01 -G 200 -N 0 -t 'datasets/features/train/y_features_opt2_300_train____________.csv'
+
 if __name__ == '__main__':
     DATA_PATH = os.path.join(*[BASE_DIR, 'datasets', 'features', 'train', '2classes', 'y_features_opt2_300_train.csv'])
     COMMAND = get_main_command()
