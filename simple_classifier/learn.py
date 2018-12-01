@@ -9,11 +9,11 @@ BASE_DIR = os.path.dirname(__file__)
 OUTPUT_FOLDER = os.path.join(BASE_DIR, 'output')
 
 DEFAULT_WEKA_PATH = os.path.join( *[BASE_DIR, 'weka', 'weka.jar'] )
-
+HoeffdingTree_CLASS = "weka.classifiers.trees.HoeffdingTree"
 J48_CLASS = "weka.classifiers.trees.J48"
 BAGGING_CLASS = "weka.classifiers.meta.Bagging"
 
-BAGGING_ENABLED = False
+BAGGING_ENABLED = HoeffdingTree_CLASS
 
 DEFAULT_CLASS = J48_CLASS
 DEFAULT_MESURE = 'ROC Area'
@@ -196,7 +196,7 @@ def learn():
     i = 0
     while True:
         i += 1
-        algo_params = get_j48_params()
+        algo_params = get_hoeffdingtree_params()
 
         try:
            max_mesure, best_algo_params, best_bagging_params, best_mesures = run(algo_params, max_mesure, best_algo_params, best_bagging_params, best_mesures, i)
@@ -204,7 +204,33 @@ def learn():
         except Exception as e:
             lg.exception(e)
 
-
+def get_hoeffdingtree_params():
+    global DONE_hoeffdingtree_PARAMS
+    params = ''
+    
+    while params in DONE_J48_PARAMS or params == '':
+        if bool(random.getrandbits(1)): 
+            params = '{} -H {}'.format(params, random.uniform(0,1))
+        if bool(random.getrandbits(1)): 
+            params = '{} -L {}'.format(params, random.choice([0,1,2]))
+        if bool(random.getrandbits(1)): 
+            params = '{} -S {}'.format(params, random.choice([0,1]))
+        if bool(random.getrandbits(1)): 
+            params = '{} -M {}'.format(params, random.choice(0,1))
+        if bool(random.getrandbits(1)): 
+            params = '{} -G {}'.format(params, random.choice(0,300))
+        if bool(random.getrandbits(1)): 
+            params = '{} -N {}'.format(params, random.choice(0,130))
+        if bool(random.getrandbits(1)): 
+            params = '{} -P'.format(params)
+        
+        if params == '':
+            params = '-H 0.05 -L 2 -S 1 -M 0.01 -G 200 -N 0'
+    DONE_J48_PARAMS += [params]
+    return params
+# 
+#  -S 1 -E 1.0 e-7 -H 0.05 -L 2 -S 1 -M 0.01 G 200 N 0.0
+# java -cp weka/weka.jar/ weka.classifiers.trees.HoeffdingTree -H 0.05 -L 2 -S 1 -M 0.01 -G 200 -N 0 -t 'datasets/features/train/y_features_opt2_300_train____________.csv'
 if __name__ == '__main__':
     DATA_PATH = os.path.join(*[BASE_DIR, 'datasets', 'features', 'train', 'y_features_opt2_300_train____________.csv'])
     COMMAND = get_main_command()
