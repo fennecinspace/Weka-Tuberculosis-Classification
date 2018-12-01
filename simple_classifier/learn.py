@@ -90,7 +90,7 @@ def get_j48_params():
     
     while params in DONE_PARAMS or params == '':
         if bool(random.getrandbits(1)): 
-            params = '{} -C {}'.format(params, random.uniform(0,1)) ## above .5 is same as disabling it
+            params = '{} -C {}'.format(params, round(random.uniform(0,1), 5)) ## above .5 is same as disabling it
         else:
             if bool(random.getrandbits(1)): 
                 params = '{} -N {} -R'.format(params, random.randint(2, 130)) # replace 130 with number of example maybe ? ask teacher for limit
@@ -153,7 +153,7 @@ def get_RandomForest_params():
             params = '{} -M {}'.format(params, random.randint(1,50)) 
         
         if bool(random.getrandbits(1)): 
-            params = '{} -V {}'.format(params, random.uniform(0,1))
+            params = '{} -V {}'.format(params, round(random.uniform(0,1), 5))
         
         if bool(random.getrandbits(1)): 
             params = '{} -S {}'.format(params, random.randint(1,50)) 
@@ -193,22 +193,24 @@ def get_hoeffdingtree_params():
     
     while params in DONE_PARAMS or params == '':
         if bool(random.getrandbits(1)): 
-            params = '{} -H {}'.format(params, random.uniform(0,1))
+            params = '{} -H {}'.format(params, round(random.uniform(0,1), 5))
         if bool(random.getrandbits(1)): 
             params = '{} -L {}'.format(params, random.choice([0,1,2]))
         if bool(random.getrandbits(1)): 
+            params = '{} -E {}'.format(params, round(random.uniform(0,1), 5))
+        if bool(random.getrandbits(1)): 
             params = '{} -S {}'.format(params, random.choice([0,1]))
         if bool(random.getrandbits(1)): 
-            params = '{} -M {}'.format(params, random.uniform(0,1))
+            params = '{} -M {}'.format(params, round(random.uniform(0,1), 5))
         if bool(random.getrandbits(1)): 
             params = '{} -G {}'.format(params, random.randint(0,300))
         if bool(random.getrandbits(1)): 
             params = '{} -N {}'.format(params, random.randint(0,130))
         if bool(random.getrandbits(1)): 
             params = '{} -P'.format(params)
-        
+
         if params == '':
-            params = '-H 0.05 -L 2 -S 1 -M 0.01 -G 200 -N 0'
+            params = '-H 0.05 -L 2 -E 0.00091 -S 1 -M 0.01 -G 200 -N 0'
             
     DONE_PARAMS += [params]
     return params
