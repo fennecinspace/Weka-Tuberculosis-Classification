@@ -9,15 +9,17 @@ BASE_DIR = os.path.dirname(__file__)
 OUTPUT_FOLDER = os.path.join(BASE_DIR, 'output')
 
 DEFAULT_WEKA_PATH = os.path.join( *[BASE_DIR, 'weka', 'weka.jar'] )
-HoeffdingTree_CLASS = "weka.classifiers.trees.HoeffdingTree"
+
+HOEFFDINGTREE_CLASS = "weka.classifiers.trees.HoeffdingTree"
 J48_CLASS = "weka.classifiers.trees.J48"
+
 BAGGING_CLASS = "weka.classifiers.meta.Bagging"
 
-BAGGING_ENABLED = HoeffdingTree_CLASS
+BAGGING_ENABLED = True
 
-DEFAULT_CLASS = J48_CLASS
+DEFAULT_CLASS = HOEFFDINGTREE_CLASS
 DEFAULT_MESURE = 'ROC Area'
-DONE_J48_PARAMS, DONE_BAGGING_PARAMS = [], []
+DONE_PARAMS = []
 
 
 
@@ -82,10 +84,10 @@ def save_data(data, mesure):
 
 
 def get_j48_params():
-    global DONE_J48_PARAMS
+    global DONE_PARAMS
     params = ''
     
-    while params in DONE_J48_PARAMS or params == '':
+    while params in DONE_PARAMS or params == '':
         if bool(random.getrandbits(1)): 
             params = '{} -C {}'.format(params, random.uniform(0,1)) ## above .5 is same as disabling it
         else:
@@ -122,15 +124,15 @@ def get_j48_params():
         if params == '':
             params = '-C 0.25 -M 7'
 
-    DONE_J48_PARAMS += [params]
+    DONE_PARAMS += [params]
 
     return params
 
 def get_bagging_params():
-    global DONE_BAGGING_PARAMS
+    global DONE_PARAMS
     params = ''
 
-    while params not in DONE_BAGGING_PARAMS and params == '':
+    while params not in DONE_PARAMS and params == '':
         if bool(random.getrandbits(1)): 
             params = "{} -P {}".format(params, random.randint(0, 100))
         if bool(random.getrandbits(1)): 
@@ -151,7 +153,7 @@ def get_bagging_params():
         if params == '':
             params = '-S 50'
 
-    DONE_BAGGING_PARAMS += [params]
+    DONE_PARAMS += [params]
     return params
 
 
@@ -205,10 +207,10 @@ def learn():
             lg.exception(e)
 
 def get_hoeffdingtree_params():
-    global DONE_hoeffdingtree_PARAMS
+    global DONE_PARAMS
     params = ''
     
-    while params in DONE_J48_PARAMS or params == '':
+    while params in DONE_PARAMS or params == '':
         if bool(random.getrandbits(1)): 
             params = '{} -H {}'.format(params, random.uniform(0,1))
         if bool(random.getrandbits(1)): 
@@ -216,22 +218,23 @@ def get_hoeffdingtree_params():
         if bool(random.getrandbits(1)): 
             params = '{} -S {}'.format(params, random.choice([0,1]))
         if bool(random.getrandbits(1)): 
-            params = '{} -M {}'.format(params, random.choice(0,1))
+            params = '{} -M {}'.format(params, random.uniform(0,1))
         if bool(random.getrandbits(1)): 
-            params = '{} -G {}'.format(params, random.choice(0,300))
+            params = '{} -G {}'.format(params, random.randint(0,300))
         if bool(random.getrandbits(1)): 
-            params = '{} -N {}'.format(params, random.choice(0,130))
+            params = '{} -N {}'.format(params, random.randint(0,130))
         if bool(random.getrandbits(1)): 
             params = '{} -P'.format(params)
         
         if params == '':
             params = '-H 0.05 -L 2 -S 1 -M 0.01 -G 200 -N 0'
-    DONE_J48_PARAMS += [params]
+            
+    DONE_PARAMS += [params]
     return params
 # 
 #  -S 1 -E 1.0 e-7 -H 0.05 -L 2 -S 1 -M 0.01 G 200 N 0.0
 # java -cp weka/weka.jar/ weka.classifiers.trees.HoeffdingTree -H 0.05 -L 2 -S 1 -M 0.01 -G 200 -N 0 -t 'datasets/features/train/y_features_opt2_300_train____________.csv'
 if __name__ == '__main__':
-    DATA_PATH = os.path.join(*[BASE_DIR, 'datasets', 'features', 'train', 'y_features_opt2_300_train____________.csv'])
+    DATA_PATH = os.path.join(*[BASE_DIR, 'datasets', 'features', 'train', '2classes', 'y_features_opt2_300_train.csv'])
     COMMAND = get_main_command()
     learn()
