@@ -4,7 +4,6 @@ import subprocess as sp
 import logging as lg
 import json
 from datetime import datetime as dt
-import atexit
 
 BASE_DIR = os.path.dirname(__file__) 
 
@@ -22,13 +21,6 @@ BAGGING_CLASS = "weka.classifiers.meta.Bagging"
 DEFAULT_ALGO_CLASS = J48_CLASS
 DEFAULT_MESURE = 'ROC Area'
 DONE_PARAMS = []
-
-
-def exit_handler():
-    print('EXITING...')
-
-atexit.register(exit_handler)
-
 
 def get_args(argv):
     data, test, output, weka_path, weka_class = None, None, None, None, None
@@ -135,7 +127,6 @@ class Model():
 
         file_path, file_name = os.path.split(self.data_path)
         self.output_path, self.old_runs = self.check_output_path(output_path or DEFAULT_OUTPUT_PATH, weka, file_name)
-        
 
 
     @classmethod
@@ -177,11 +168,13 @@ class Model():
                 path = input("output file directory doesn't exist, output path : ")
         return path, old_runs
 
+
     @classmethod
     def check_data_path(cls, path):
         while not os.path.exists(path) :
             path = input("incorrect dataset path, dataset path : ")
         return path
+
 
     @classmethod
     def check_test_path(cls, path):
@@ -189,6 +182,7 @@ class Model():
             while not os.path.exists(path) :
                 path = input("incorrect dataset path, dataset path : ")
         return path
+
 
     def save_data(self,data, mesure, algo_params, bagging_params):
         file_path = self.output_path
@@ -244,6 +238,7 @@ class Model():
         except:
             return 0, all_data, [], []
 
+
     @classmethod
     def get_main_command(cls, weka):
         ## setting up main command
@@ -276,16 +271,30 @@ class Model():
     def test(self):
         command = self.get_main_command(self.weka)
         test_path = "-t '{}' -T '{}'".format(self.data_path, self.test_data_path)
+
+        best_res = {'i': 0, 'mesure': 0}
         
-        print(self.old_runs)
+        training_res = self.old_runs['results']
+
+        for res in training_res:
+            if best_res['mesure'] < res['mesure']:
+                best_res['mesure'] = res['mesure']        
+                best_res['algo_params'] = res['algo_params']
+                if 'bagging_params' in best_res:
+                    best_res['bagging_params'] = res['bagging_params']
+                else:
+                    best_res['bagging_params'] = None
+                best_res['content'] = res['content']
         
-        # self.run(command, test_path, algo_params, 0)
+        if res['mesure'] > 0:
+            self.run(command, test_path, best_res['algo_params'], 0, best_res['bagging_params'])
 
 
            
-    def run(self, command, data_path, algo_params, i = 0):
+    def run(self, command, data_path, algo_params, i = 0, bagging_params = None):
         if self.weka.bagging_enabled:
-            bagging_params = self.get_bagging_params()
+            if not bagging_params:
+                bagging_params = self.get_bagging_params()
             final_command = "{} {} {} -W {} -- {}".format(command, bagging_params, data_path, self.weka.weka_class, algo_params)
         else:
             bagging_params = None

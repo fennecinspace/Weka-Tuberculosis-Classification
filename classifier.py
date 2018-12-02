@@ -44,5 +44,5 @@ if __name__ == '__main__':
         else: ## testing
             model.learn()
     except Exception as e:
-        print(e)
         print('\b\b   ')
+        print('HALTED...')
