@@ -4,6 +4,7 @@ import subprocess as sp
 import logging as lg
 import json
 from datetime import datetime as dt
+import atexit
 
 BASE_DIR = os.path.dirname(__file__) 
 
@@ -20,6 +21,13 @@ BAGGING_CLASS = "weka.classifiers.meta.Bagging"
 DEFAULT_ALGO_CLASS = J48_CLASS
 DEFAULT_MESURE = 'ROC Area'
 DONE_PARAMS = []
+
+
+def exit_handler():
+    print('EXITING...')
+
+atexit.register(exit_handler)
+
 
 def get_args(argv):
     data, output, weka_path, weka_class = None, None, None, None
@@ -80,27 +88,6 @@ def get_args(argv):
             print ('  -h, --help                  Show help\n')
 
     except: pass
-    
-
-    # try:
-    #     opts, args = getopt.getopt(argv,"d:o:p:c",["data=","output=","weka-path=","weka-class="])
-    # except getopt.GetoptError:
-    #     print ('python3 learn.py [OPTIONS]\nReturns the best model for a certain dataset, uses Weka\n')
-    #     print ('  -d, --data           dataset to use, file format must be compatibale with weka')
-    #     print ('  -o, --output         model output file (must be .json, parent directory must exist)')
-    #     print ('  -p, --weka-path      path to the weka.jar file')
-    #     print ('  -c, --weka-class     weka class')
-    #     sys.exit(2)
-    # for opt, arg in opts:
-    #     print(opt, arg)
-    #     if opt in ["-d", "--data"]:
-    #         data = arg
-    #     elif opt in ["-o", "--output"]:
-    #         output = arg
-    #     elif opt in ["-p", "--weka-path"]:
-    #         weka_path = arg
-    #     elif opt in ["-c", "--weka-class"]:
-    #         weka_class = arg
 
     return data, output, weka_path, weka_class, bypass_settings, bagging_enabled
 
@@ -135,6 +122,8 @@ class Model():
 
     @classmethod
     def check_output_path(cls, path, weka):
+        global DONE_PARAMS
+
         if path:
             while True:
                 if os.path.isdir(path):
@@ -146,7 +135,15 @@ class Model():
                         except Exception as e:
                             pass
                     else:
+                        with open(os.path.join(path, weka.weka_class + '.json'), 'r') as file:
+                            runs = json.loads(file.read())
+                        
+                        if weka.bagging_enabled:
+                            DONE_PARAMS = runs['bagging']['algo_done']
+                        else:
+                            DONE_PARAMS = runs['no-bagging']['algo_done']
                         break
+
                 path = input("output file directory doesn't exist, output path : ")
         return path
 
@@ -173,6 +170,7 @@ class Model():
                         'bagging_params': bagging_params,
                         'content': data,
                     }]
+                    runs['bagging']['algo_done'] = DONE_PARAMS
                     runs['bagging']['index'] += 1
                 else:
                     index = runs['no-bagging']['index']
@@ -182,6 +180,7 @@ class Model():
                         'algo_params': algo_params,
                         'content': data,
                     }]
+                    runs['no-bagging']['algo_done'] = DONE_PARAMS
                     runs['no-bagging']['index'] += 1
                 file.write(json.dumps(runs))
 
@@ -226,10 +225,8 @@ class Model():
         best_mesures = [[],[]]
 
         command = self.get_main_command(self.weka)
-
-        i = 0
+        i = len(DONE_PARAMS)
         while True:
-            i += 1
             if self.weka.weka_class == J48_CLASS:
                 algo_params = self.get_j48_params()
             elif self.weka.weka_class == HOEFFDINGTREE_CLASS:
@@ -266,6 +263,7 @@ class Model():
                     print('{} : {}'.format(col, val))
 
                 self.save_data(returned, mesure, algo_params, bagging_params)
+                i += 1
 
             except Exception as e:
                 lg.exception(e)
@@ -405,29 +403,26 @@ class Model():
 
 
     def get_bagging_params(self):
-        global DONE_PARAMS
         params = ''
 
-        while params not in DONE_PARAMS and params == '':
-            if bool(random.getrandbits(1)): 
-                params = "{} -P {}".format(params, random.randint(0, 100))
-            if bool(random.getrandbits(1)): 
-                params = "{} -O".format(params)
-            if bool(random.getrandbits(1)): 
-                params = "{} -S {}".format(params, random.randint(1, 130))
-            if bool(random.getrandbits(1)): 
-                params = "{} -num-slots {}".format(params, random.randint(1, 30))
-            if bool(random.getrandbits(1)): 
-                params = "{} -I {}".format(params, random.randint(1, 30))
-            if bool(random.getrandbits(1)): 
-                params = "{} -store-out-of-bag-predictions".format(params)
-            if bool(random.getrandbits(1)): 
-                params = "{} -output-out-of-bag-complexity-statistics".format(params)
-            if bool(random.getrandbits(1)): 
-                params = "{} -represent-copies-using-weights".format(params)
-                        
-            if params == '':
-                params = '-S 50'
+        if bool(random.getrandbits(1)): 
+            params = "{} -P {}".format(params, random.randint(0, 100))
+        if bool(random.getrandbits(1)): 
+            params = "{} -O".format(params)
+        if bool(random.getrandbits(1)): 
+            params = "{} -S {}".format(params, random.randint(1, 130))
+        if bool(random.getrandbits(1)): 
+            params = "{} -num-slots {}".format(params, random.randint(1, 30))
+        if bool(random.getrandbits(1)): 
+            params = "{} -I {}".format(params, random.randint(1, 30))
+        if bool(random.getrandbits(1)): 
+            params = "{} -store-out-of-bag-predictions".format(params)
+        if bool(random.getrandbits(1)): 
+            params = "{} -output-out-of-bag-complexity-statistics".format(params)
+        if bool(random.getrandbits(1)): 
+            params = "{} -represent-copies-using-weights".format(params)
+                    
+        if params == '':
+            params = '-S 50'
 
-        DONE_PARAMS += [params]
         return params
