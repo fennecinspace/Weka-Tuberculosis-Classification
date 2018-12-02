@@ -1,0 +1,127 @@
+@font-face {
+    font-family: 'Ubuntu-Regular';
+    src: url('../fonts/Ubuntu-Regular.ttf');
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    font-family: 'Ubuntu-Regular', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif, Arial, Helvetica, sans-serif;
+}
+
+
+html, body {
+    overflow: hidden;
+}
+
+.container {
+    margin: 15px auto 0 auto;
+    width: 300px;
+    height: 100%;
+}
+
+.start_btn {
+    font-weight: 800;
+    letter-spacing: 2px;
+    font-size: 30px;
+    color: #f44336;
+    line-height: 50px;
+
+    height: 50px;
+    width: 300px;
+    padding: 0 80px 0 20px;
+    border-radius: 10px;
+    overflow: hidden;
+
+    background: url(../images/start.svg) no-repeat right;
+    background-color: #f6f8fa; 
+
+    transition: .3s;
+}
+
+.start_btn:hover {
+    background-color: #f6f8fa;
+    transform: translateY(-1px);
+    cursor: pointer;
+    transition: .3s;
+    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.custom_checkbox_div {
+    height: 30px;
+    width: 30px;
+    background: #fff;
+    border-radius: 5px;
+    border: 1px dashed #9c9c9c;
+    text-align: center;
+}
+
+.custom_checkbox_input {
+    display: none;
+}
+
+
+.custom_checkbox_input:checked + .custom_checkbox_div:after{
+    content: '\2714';
+    color: rgb(0, 0, 0);
+    font-size: 20px;
+    line-height: 30px; 
+}
+
+.custom_checkbox_div:hover {
+    cursor: pointer;
+}
+
+
+.element {
+    padding-top: 5px;
+}
+
+.flex_it {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.checkbox_text {
+    font-weight: 800;
+
+}
+
+.options {
+    margin-top: 10px; 
+    background-color: #f6f8fa; 
+    border-radius: 10px;
+    padding: 10px;
+
+}
+
+.options_title {
+    color: #f44336;
+    text-align: center;
+    font-weight: 800;
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+.option_section { 
+    margin: 5px auto 0 auto;
+    border-radius: 5px;
+    border: 1px dashed black;
+    padding: 5px;
+}
+
+.upload_title {
+    font-weight: 800;
+    text-align: center;
+}
+
+
+.settings_section_data_input {
+    width: calc(100% - 50px);
+    background: #ffffff;
+    padding: 5px;
+    border-radius: 5px;
+    border: none;
+    border: 1px dashed #9c9c9c;;
+}

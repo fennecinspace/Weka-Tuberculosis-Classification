@@ -1,5 +1,45 @@
 # Machine Learning Homework
 
-For help:
+#### GROUP: 
+- Benkedadra Mohamed
+- Youcefi Mohemmed Yassine
+- Benkorreche Mohamed El Amine
 
-    python3 classifier.py -h
+### CLI:
+
+- install requirements:
+
+        sudo apt-get install python3
+
+- For help:
+
+        python3 classifier.py -h
+
+### GUI:
+
+- install requirements:
+        
+        sudo apt-get install python3 python3-pip gnome-terminal
+        sudo pip3 install eel==0.9.7
+
+- launch gui:
+
+        cd gui
+        python3 gui.py
+
+### FILES:
+- Train :
+                
+        $(pwd)/datasets/features/train/2classes/y_features_opt2_300_train.csv
+        $(pwd)/datasets/features/train/2classes/z_features_opt2_300_train.csv
+        $(pwd)/datasets/features/train/2classes/yz_features_opt2_600_train.csv
+- Val :
+
+        $(pwd)/datasets/features/val/2classes/y_features_opt2_300_val.csv
+        $(pwd)/datasets/features/val/2classes/z_features_opt2_300_val.csv
+        $(pwd)/datasets/features/val/2classes/yz_features_opt2_600_val.csv
+- Train Val :
+  
+        $(pwd)/datasets/features/trainval/2classes/y_features_opt2_300_trainval.csv
+        $(pwd)/datasets/features/trainval/2classes/z_features_opt2_300_trainval.csv
+        $(pwd)/datasets/features/trainval/2classes/yz_features_opt2_300_trainval.csv

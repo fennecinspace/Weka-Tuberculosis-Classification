@@ -5,7 +5,7 @@ import logging as lg
 import json
 from datetime import datetime as dt
 
-BASE_DIR = os.path.dirname(__file__) 
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 DEFAULT_DATA_PATH = os.path.join(*[BASE_DIR, 'datasets', 'features', 'train', '2classes', 'y_features_opt2_300_train.csv'])
 DEFAULT_TEST_DATA_PATH = os.path.join(*[BASE_DIR, 'datasets', 'features', 'val', '2classes', 'y_features_opt2_300_val.csv'])

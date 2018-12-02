@@ -1,1 +1,0 @@
-Options: -S 40 -num-slots 1 -represent-copies-using-weights -W weka.classifiers.trees.J48 -- -U -Q 14 -O -doNotMakeSplitPointActualValue

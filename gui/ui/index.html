@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="css/style.css">
+    <script type="text/javascript" src="/eel.js"></script>
+    <script type="text/javascript" src="js/main.js"></script>
+
+    <title>Classifier</title>
+</head>
+<body>
+    <div class="container">
+        <div onclick="start_script(this, event);" class="start_btn">START</div>
+        <div class="options">
+            <div class="options_title">OPTIONS</div>
+            <div class="element flex_it option_section">
+                <div class="checkbox_text">Bagging</div>
+                <div>
+                    <input class='custom_checkbox_input' data-type="checkbox" type="checkbox" id="bagging" checked>
+                    <div class='custom_checkbox_div' onclick="change_checkbox(this);"></div>
+                </div>
+            </div>
+            <div class="option_section">
+                <div class="upload_title"> Data </div>
+                <input type="file" name="data" id="data">
+            </div>
+            <div class="option_section">
+                <div class="upload_title"> Test </div>
+                <input type="file" name="test" id="test">
+            </div>
+            <div class="option_section flex_it">
+                <div class="upload_title upload_title_left"> Class </div>
+                <select class="settings_section_data_input" name="class" id="cls">
+                    <option value="">weka.classifiers.trees.J48</option>
+                    <option value="">weka.classifiers.trees.HoeffdingTree</option>
+                    <option value="">weka.classifiers.trees.RandomForest</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
