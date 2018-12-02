@@ -113,12 +113,17 @@ class Weka():
         return class_name
 
 class Model():
-    __slots__ = ['data_path', 'output_path', 'weka'] 
+    __slots__ = ['data_path', 'output_path', 'weka', 'max_mesure', 'best_algo_params', 'best_bagging_params', 'best_mesures'] 
 
     def __init__(self, weka, data_path, output_path = None):
         self.weka = weka
         self.data_path = self.check_data_path(data_path or DEFAULT_DATA_PATH)
         self.output_path = self.check_output_path(output_path or DEFAULT_OUTPUT_PATH, weka)
+        
+        self.max_mesure = 0
+        self.best_algo_params = ''
+        self.best_bagging_params = ''
+        self.best_mesures = [[],[]]
 
     @classmethod
     def check_output_path(cls, path, weka):
@@ -219,13 +224,8 @@ class Model():
 
 
     def learn(self):
-        max_mesure = 0
-        best_algo_params = ''
-        best_bagging_params = ''
-        best_mesures = [[],[]]
-
         command = self.get_main_command(self.weka)
-        i = len(DONE_PARAMS)
+        i = len(DONE_PARAMS) + 1
         while True:
             if self.weka.weka_class == J48_CLASS:
                 algo_params = self.get_j48_params()
@@ -233,40 +233,48 @@ class Model():
                 algo_params = self.get_hoeffdingtree_params()
             elif self.weka.weka_class == RANDOMFOREST_CLASS:
                 algo_params = self.get_RandomForest_params()
+            
+            self.run(command, algo_params, i)
 
-            if self.weka.bagging_enabled:
-                bagging_params = self.get_bagging_params()
-                final_command = "{} {} -t '{}' -W {} -- {}".format(command, bagging_params, self.data_path, self.weka.weka_class, algo_params)
-            else:
-                bagging_params = None
-                final_command = "{} {} -t '{}'".format(command, algo_params, self.data_path)
+           
+    def run(self, command, algo_params, i = 0):
+        if self.weka.bagging_enabled:
+            bagging_params = self.get_bagging_params()
+            final_command = "{} {} -t '{}' -W {} -- {}".format(command, bagging_params, self.data_path, self.weka.weka_class, algo_params)
+        else:
+            bagging_params = None
+            final_command = "{} {} -t '{}'".format(command, algo_params, self.data_path)
 
-            try:
-                returned_raw = sp.check_output(['bash', '-c', final_command], stderr = sp.STDOUT)
-                mesure, returned, mesures_cols, mesures_vals = self.get_weka_learning_result(returned_raw, DEFAULT_MESURE)
+        try:
+            returned_raw = sp.check_output(['bash', '-c', final_command], stderr = sp.STDOUT)
+            mesure, returned, mesures_cols, mesures_vals = self.get_weka_learning_result(returned_raw, DEFAULT_MESURE)
 
-                if mesure > max_mesure:
-                    max_mesure = mesure
-                    best_algo_params = algo_params
-                    if self.weka.bagging_enabled:
-                        best_bagging_params = bagging_params
-                    best_mesures = [mesures_cols, mesures_vals]
-
-
-                os.system('clear')
-                print('Run {} => {} {}'.format(str(i).zfill(4), DEFAULT_MESURE, max_mesure), end = '\n\n')
+            if mesure > self.max_mesure:
+                self.max_mesure = mesure
+                self.best_algo_params = algo_params
                 if self.weka.bagging_enabled:
-                    print('Bagging Parameters : {}'.format(best_bagging_params))
-                print('Algorithme Parameters : {}'.format(best_algo_params), end = '\n\n')
-                print('Mesures :')
-                for col, val in list(zip(best_mesures[0], best_mesures[1])):
-                    print('{} : {}'.format(col, val))
+                    self.best_bagging_params = bagging_params
+                self.best_mesures = [mesures_cols, mesures_vals]
 
-                self.save_data(returned, mesure, algo_params, bagging_params)
-                i += 1
 
-            except Exception as e:
-                lg.exception(e)
+            self.print_result(i)
+
+            self.save_data(returned, mesure, algo_params, bagging_params)
+            i += 1
+
+        except Exception as e:
+            lg.exception(e)
+
+
+    def print_result(self, run_number = 1):
+        os.system('clear')
+        print('Run {} => {} {}'.format(str(run_number).zfill(4), DEFAULT_MESURE, self.max_mesure), end = '\n\n')
+        if self.weka.bagging_enabled:
+            print('Bagging Parameters : {}'.format(self.best_bagging_params))
+        print('Algorithme Parameters : {}'.format(self.best_algo_params), end = '\n\n')
+        print('Mesures :')
+        for col, val in list(zip(self.best_mesures[0], self.best_mesures[1])):
+            print('{} : {}'.format(col, val))
 
 
     def get_j48_params(self):
