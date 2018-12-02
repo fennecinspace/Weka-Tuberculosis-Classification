@@ -9,6 +9,7 @@ import atexit
 BASE_DIR = os.path.dirname(__file__) 
 
 DEFAULT_DATA_PATH = os.path.join(*[BASE_DIR, 'datasets', 'features', 'train', '2classes', 'y_features_opt2_300_train.csv'])
+DEFAULT_TEST_DATA_PATH = os.path.join(*[BASE_DIR, 'datasets', 'features', 'val', '2classes', 'y_features_opt2_300_val.csv'])
 DEFAULT_OUTPUT_PATH = os.path.join(*[BASE_DIR, 'output'])
 
 DEFAULT_WEKA_PATH = os.path.join( *[BASE_DIR, 'weka', 'weka.jar'] )
@@ -30,7 +31,7 @@ atexit.register(exit_handler)
 
 
 def get_args(argv):
-    data, output, weka_path, weka_class = None, None, None, None
+    data, test, output, weka_path, weka_class = None, None, None, None, None
     bypass_settings, bagging_enabled = False, False
 
     try:
@@ -62,6 +63,12 @@ def get_args(argv):
             data = argv[argv.index('--data') + 1]
     except: print('"-d" has been passed incorrectly do "-h" for HELP')
 
+    try:
+        if '-t' in argv:
+            test = argv[argv.index('-t') + 1]
+        elif '--test' in argv:
+            test = argv[argv.index('--test') + 1]
+    except: print('"-t" has been passed incorrectly do "-h" for HELP')
 
     try:
         if '-b' in argv or '--bagging' in argv:
@@ -76,7 +83,8 @@ def get_args(argv):
     try:
         if '-h' in argv or '--help' in argv:
             print ('Returns the best model for a certain dataset using Weka.\n\npython3 classifier.py [OPTIONS]\n')
-            print ('  -d, --data [path]           Dataset to use, file format must be compatibale with weka')
+            print ('  -d, --data [path]           Training Dataset, file format must be compatibale with weka')
+            print ('  -t, --test [path]           Testing Dataset, file format must be compatibale with weka')
             print ('  -o, --output [path]         Model output directory')
             print ('  -p, --weka-path [path]      Path to the weka.jar file')
             print ('  -c, --weka-class [class]    Weka class, choose between:')
@@ -89,7 +97,7 @@ def get_args(argv):
 
     except: pass
 
-    return data, output, weka_path, weka_class, bypass_settings, bagging_enabled
+    return data, test, output, weka_path, weka_class, bypass_settings, bagging_enabled
 
 
 class Weka():
@@ -113,59 +121,83 @@ class Weka():
         return class_name
 
 class Model():
-    __slots__ = ['data_path', 'output_path', 'weka', 'max_mesure', 'best_algo_params', 'best_bagging_params', 'best_mesures'] 
+    __slots__ = ['data_path', 'test_data_path', 'output_path', 'weka', 'max_mesure', 'best_algo_params', 'best_bagging_params', 'best_mesures', 'old_runs'] 
 
-    def __init__(self, weka, data_path, output_path = None):
-        self.weka = weka
-        self.data_path = self.check_data_path(data_path or DEFAULT_DATA_PATH)
-        self.output_path = self.check_output_path(output_path or DEFAULT_OUTPUT_PATH, weka)
-        
+    def __init__(self, weka, data_path, test_data_path, output_path = None):
         self.max_mesure = 0
         self.best_algo_params = ''
         self.best_bagging_params = ''
         self.best_mesures = [[],[]]
 
+        self.weka = weka
+        self.data_path = self.check_data_path(data_path or DEFAULT_DATA_PATH)
+        self.test_data_path = self.check_test_path(test_data_path)
+
+        file_path, file_name = os.path.split(self.data_path)
+        self.output_path, self.old_runs = self.check_output_path(output_path or DEFAULT_OUTPUT_PATH, weka, file_name)
+        
+
+
     @classmethod
-    def check_output_path(cls, path, weka):
+    def check_output_path(cls, path, weka, file_name):
         global DONE_PARAMS
+        old_runs = None
 
         if path:
             while True:
                 if os.path.isdir(path):
-                    if not os.path.exists( os.path.join(path, weka.weka_class + '.json') ): 
+                    if not os.path.exists( os.path.join(path, file_name + '_' + weka.weka_class + '.json') ): 
                         try:
-                            with open(os.path.join(path, weka.weka_class + '.json'), 'w') as file:
-                                file.write('{ "bagging": { "index": 0, "results": [] }, "no-bagging": { "index": 0, "results": [] } }')
+                            with open(os.path.join(*[BASE_DIR, 'output', 'template.json'])) as file:
+                                template = file.read()
+                            with open(os.path.join(path, file_name + '_' + weka.weka_class + '.json'), 'w') as file:
+                                file.write(template)
+                            
+                            path = os.path.join(path, file_name + '_' + weka.weka_class + '.json')
                             break
                         except Exception as e:
                             pass
                     else:
-                        with open(os.path.join(path, weka.weka_class + '.json'), 'r') as file:
-                            runs = json.loads(file.read())
-                        
-                        if weka.bagging_enabled:
-                            DONE_PARAMS = runs['bagging']['algo_done']
-                        else:
-                            DONE_PARAMS = runs['no-bagging']['algo_done']
-                        break
+                        try:
+                            with open(os.path.join(path, file_name + '_' + weka.weka_class + '.json'), 'r') as file:
+                                runs = json.loads(file.read())
+                            
+                            if weka.bagging_enabled:
+                                DONE_PARAMS = runs['bagging']['algo_done']
+                                old_runs = runs['bagging']
+                            else:
+                                DONE_PARAMS = runs['no-bagging']['algo_done']
+                                old_runs = runs['no-bagging']
+
+                            path = os.path.join(path, file_name + '_' + weka.weka_class + '.json')
+                            break
+                        except Exception as e:
+                            pass
 
                 path = input("output file directory doesn't exist, output path : ")
-        return path
+        return path, old_runs
 
     @classmethod
-    def check_data_path(cls, path, val = False):
+    def check_data_path(cls, path):
         while not os.path.exists(path) :
             path = input("incorrect dataset path, dataset path : ")
         return path
 
+    @classmethod
+    def check_test_path(cls, path):
+        if path:
+            while not os.path.exists(path) :
+                path = input("incorrect dataset path, dataset path : ")
+        return path
+
     def save_data(self,data, mesure, algo_params, bagging_params):
-        file_path = os.path.join( self.output_path, self.weka.weka_class + '.json')
+        file_path = self.output_path
 
         try:
-            with open(file_path, 'r') as file:
+            with open(self.output_path, 'r') as file:
                 runs =  json.loads(file.read())
 
-            with open(file_path, 'w') as file:
+            with open(self.output_path, 'w') as file:
                 if self.weka.bagging_enabled:
                     index = runs['bagging']['index']
                     runs['bagging']['results'] +=  [{
@@ -225,6 +257,8 @@ class Model():
 
     def learn(self):
         command = self.get_main_command(self.weka)
+        train_path = "-t '{}'".format(self.data_path)
+
         i = len(DONE_PARAMS) + 1
         while True:
             if self.weka.weka_class == J48_CLASS:
@@ -234,41 +268,61 @@ class Model():
             elif self.weka.weka_class == RANDOMFOREST_CLASS:
                 algo_params = self.get_RandomForest_params()
             
-            self.run(command, algo_params, i)
+            self.run(command, train_path, algo_params, i)
+
+            i += 1
+
+
+    def test(self):
+        command = self.get_main_command(self.weka)
+        test_path = "-t '{}' -T '{}'".format(self.data_path, self.test_data_path)
+        
+        print(self.old_runs)
+        
+        # self.run(command, test_path, algo_params, 0)
+
 
            
-    def run(self, command, algo_params, i = 0):
+    def run(self, command, data_path, algo_params, i = 0):
         if self.weka.bagging_enabled:
             bagging_params = self.get_bagging_params()
-            final_command = "{} {} -t '{}' -W {} -- {}".format(command, bagging_params, self.data_path, self.weka.weka_class, algo_params)
+            final_command = "{} {} {} -W {} -- {}".format(command, bagging_params, data_path, self.weka.weka_class, algo_params)
         else:
             bagging_params = None
-            final_command = "{} {} -t '{}'".format(command, algo_params, self.data_path)
+            final_command = "{} {} {}".format(command, algo_params, data_path)
 
         try:
             returned_raw = sp.check_output(['bash', '-c', final_command], stderr = sp.STDOUT)
             mesure, returned, mesures_cols, mesures_vals = self.get_weka_learning_result(returned_raw, DEFAULT_MESURE)
 
-            if mesure > self.max_mesure:
-                self.max_mesure = mesure
-                self.best_algo_params = algo_params
-                if self.weka.bagging_enabled:
-                    self.best_bagging_params = bagging_params
-                self.best_mesures = [mesures_cols, mesures_vals]
+            if not self.test_data_path:
+                self.update_best_params(mesure, mesures_cols, mesures_vals, algo_params, bagging_params)
 
-
-            self.print_result(i)
-
-            self.save_data(returned, mesure, algo_params, bagging_params)
-            i += 1
+            if self.test_data_path:
+                print("\nCOMMAND USED =>  {}\n".format(final_command))
+                print(returned)
+            else:
+                self.print_learning_progress(i, mesure)
+                self.save_data(returned, mesure, algo_params, bagging_params)
 
         except Exception as e:
             lg.exception(e)
 
+    
+    
+    def update_best_params(self, mesure, mesures_cols, mesures_vals, algo_params, bagging_params):
+        if mesure > self.max_mesure:
+            self.max_mesure = mesure
+            self.best_algo_params = algo_params
+            if self.weka.bagging_enabled:
+                self.best_bagging_params = bagging_params
+            self.best_mesures = [mesures_cols, mesures_vals]
 
-    def print_result(self, run_number = 1):
+
+    def print_learning_progress(self, run_number = 1, run_mesure = 0):
         os.system('clear')
-        print('Run {} => {} {}'.format(str(run_number).zfill(4), DEFAULT_MESURE, self.max_mesure), end = '\n\n')
+        print('Last Run {} => {} {}'.format(str(run_number).zfill(4), DEFAULT_MESURE, run_mesure), end = '\n\n')
+        print(' == Best Run == \n')
         if self.weka.bagging_enabled:
             print('Bagging Parameters : {}'.format(self.best_bagging_params))
         print('Algorithme Parameters : {}'.format(self.best_algo_params), end = '\n\n')
