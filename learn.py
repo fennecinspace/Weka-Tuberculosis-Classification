@@ -275,7 +275,6 @@ class Model():
         best_res = {'i': 0, 'mesure': 0}
         
         training_res = self.old_runs['results']
-
         for res in training_res:
             if best_res['mesure'] < res['mesure']:
                 best_res['mesure'] = res['mesure']        
@@ -286,7 +285,7 @@ class Model():
                     best_res['bagging_params'] = None
                 best_res['content'] = res['content']
         
-        if res['mesure'] > 0:
+        if best_res['mesure'] > 0:
             self.run(command, test_path, best_res['algo_params'], 0, best_res['bagging_params'])
 
 
