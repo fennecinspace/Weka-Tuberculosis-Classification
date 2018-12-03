@@ -1,0 +1,50 @@
+/home/hammi/Projects/app_mach/datasets/features/train/2classes/y_features_opt2_300_train.csv
+/home/hammi/Projects/app_mach/datasets/features/train/2classes/z_features_opt2_300_train.csv
+/home/hammi/Projects/app_mach/datasets/features/train/2classes/yz_features_opt2_600_train.csv
+
+
+/home/hammi/Projects/app_mach/datasets/features/val/2classes/y_features_opt2_300_val.csv
+/home/hammi/Projects/app_mach/datasets/features/val/2classes/z_features_opt2_300_val.csv
+/home/hammi/Projects/app_mach/datasets/features/val/2classes/yz_features_opt2_600_val.csv
+
+
+/home/hammi/Projects/app_mach/datasets/features/trainval/2classes/y_features_opt2_300_trainval.csv
+/home/hammi/Projects/app_mach/datasets/features/trainval/2classes/z_features_opt2_300_trainval.csv
+/home/hammi/Projects/app_mach/datasets/features/trainval/2classes/yz_features_opt2_300_trainval.csv
+
+-d -t
+
+
+---------------
+y val
+
+python classifier.py -b -c weka.classifiers.trees.HoeffdingTree -d /home/hammi/Projects/app_mach/datasets/features/train/2classes/y_features_opt2_300_train.csv -t /home/hammi/Projects/app_mach/datasets/features/val/2classes/y_features_opt2_300_val.csv
+
+y trainval
+
+python classifier.py -b -c weka.classifiers.trees.HoeffdingTree -d /home/hammi/Projects/app_mach/datasets/features/train/2classes/y_features_opt2_300_train.csv -t /home/hammi/Projects/app_mach/datasets/features/trainval/2classes/y_features_opt2_300_trainval.csv
+
+-------------------
+
+---------------
+z val
+
+python classifier.py -b -c weka.classifiers.trees.HoeffdingTree -d /home/hammi/Projects/app_mach/datasets/features/train/2classes/z_features_opt2_300_train.csv -t /home/hammi/Projects/app_mach/datasets/features/val/2classes/z_features_opt2_300_val.csv
+
+z trainval
+
+python classifier.py -b -c weka.classifiers.trees.HoeffdingTree -d /home/hammi/Projects/app_mach/datasets/features/train/2classes/z_features_opt2_300_train.csv -t /home/hammi/Projects/app_mach/datasets/features/trainval/2classes/z_features_opt2_300_trainval.csv
+
+-------------------
+
+
+---------------
+zy val
+
+python classifier.py -b -c weka.classifiers.trees.HoeffdingTree -d /home/hammi/Projects/app_mach/datasets/features/train/2classes/yz_features_opt2_600_train.csv -t /home/hammi/Projects/app_mach/datasets/features/val/2classes/yz_features_opt2_600_val.csv
+
+zy trainval
+
+python classifier.py -b -c weka.classifiers.trees.HoeffdingTree -d /home/hammi/Projects/app_mach/datasets/features/train/2classes/yz_features_opt2_600_train.csv -t /home/hammi/Projects/app_mach/datasets/features/trainval/2classes/yz_features_opt2_300_trainval.csv
+
+-------------------
