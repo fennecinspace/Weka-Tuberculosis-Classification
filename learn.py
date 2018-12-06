@@ -288,6 +288,8 @@ class Model():
         if best_res['mesure'] > 0:
             self.run(command, test_path, best_res['algo_params'], 0, best_res['bagging_params'])
 
+        input('PRESS ANY, TO EXIT...')
+
 
            
     def run(self, command, data_path, algo_params, i = 0, bagging_params = None):

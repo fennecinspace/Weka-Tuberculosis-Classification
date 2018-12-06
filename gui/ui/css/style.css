@@ -125,3 +125,13 @@ html, body {
     border: none;
     border: 1px dashed #9c9c9c;;
 }
+
+#data, #test {
+    border-radius: 5px;
+    background: None;
+    border: 1px dashed black;
+    width: 100;
+    margin: 0 auto;
+    height: 20px;
+    width: 100%;
+}

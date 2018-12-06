@@ -1,0 +1,12 @@
+{
+    "bagging": {
+        "index": 0, 
+        "algo_done": [],
+        "results": []
+    },
+    "no-bagging": {
+        "index": 0, 
+        "algo_done": [],
+        "results": []
+    }
+}

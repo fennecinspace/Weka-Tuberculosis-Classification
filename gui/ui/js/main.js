@@ -7,15 +7,15 @@ function start_script(elem, event) {
     var data = null, test = null, cls = null, cls_name = null, bagging = false;
 
     var command = "python3 ../classifier.py";
-    // command = "";
+
 
     bagging = document.querySelector('#bagging').checked;
 
-    if (document.querySelector('#data').files[0]) {
-        command = `${command} -d "${ document.querySelector('#data').files[0].path }"`;
+    if (document.querySelector('#data').value.trim()) {
+        command = `${command} -d "${ document.querySelector('#data').value }"`;
         
-        if (document.querySelector('#test').files[0]) {
-            command = `${command} -t "${ document.querySelector('#test').files[0].path }"`;
+        if (document.querySelector('#test').value.trim()) {
+            command = `${command} -t "${ document.getElementById("data").value.trim() }"`;
         }
     }
 
