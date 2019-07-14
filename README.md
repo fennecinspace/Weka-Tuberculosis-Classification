@@ -1,5 +1,10 @@
 # Machine Learning Homework
 
+Tuberculosis Types Classification (5 types) using Weka
+
+- input : 3D chest scans data for Tuberculosis patients
+- output : a modele that classifies new chest data into one of 5 Tuberculosis types
+
 #### GROUP: 
 - Benkedadra Mohamed
 - Youcefi Mohemmed Yassine
