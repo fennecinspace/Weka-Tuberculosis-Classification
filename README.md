@@ -1,4 +1,4 @@
-# Machine Learning Homework
+# Weka Tuberculosis Types Classification (Machine Learning Homework)
 
 Tuberculosis Types Classification (5 types) using Weka
 
